@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/horlakz/wallet-sync.api/payload/request"
+	"github.com/horlakz/wallet-sync.api/payload/response"
 	"github.com/horlakz/wallet-sync.api/service"
 	"github.com/horlakz/wallet-sync.api/validator"
 	"github.com/shopspring/decimal"
@@ -26,93 +29,107 @@ func NewWalletHandler(walletService service.WalletServiceInterface) WalletHandle
 }
 
 func (handler *walletHandler) GetDetails(c *fiber.Ctx) error {
-	userId := c.Locals("userId").(string)
+	userId := c.Locals("userId").(uuid.UUID)
+	var resp response.Response
 
-	uuid, err := uuid.Parse(userId)
+	wallet, err := handler.walletService.GetWalletDetails(userId)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid user ID"})
+		resp.Status = http.StatusBadRequest
+		resp.Message = "Failed to retrieve wallet details"
+		return c.Status(resp.Status).JSON(resp)
 	}
 
-	wallet, err := handler.walletService.GetWalletDetails(uuid)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": err.Error()})
-	}
+	resp.Status = http.StatusOK
+	resp.Message = "Wallet details retrieved successfully"
+	resp.Data = wallet
 
-	return c.JSON(wallet)
+	return c.Status(resp.Status).JSON(resp)
 }
 
 func (handler *walletHandler) Transfer(c *fiber.Ctx) error {
 	var transferRequest request.WalletTransferRequest
+	var resp response.Response
 
 	if err := c.BodyParser(&transferRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request"})
+		resp.Status = http.StatusBadRequest
+		resp.Message = "Invalid request"
+		return c.Status(resp.Status).JSON(resp)
 	}
 
 	if _, err := handler.validator.TransferValidate(transferRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		resp.Status = http.StatusUnprocessableEntity
+		resp.Message = err.Error()
+		return c.Status(resp.Status).JSON(resp)
 	}
 
-	userId := c.Locals("userId").(string)
-
-	uuid, err := uuid.Parse(userId)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid user ID"})
-	}
+	userId := c.Locals("userId").(uuid.UUID)
 
 	amountDecimal := decimal.NewFromFloat(transferRequest.Amount)
-	handler.walletService.TransferFunds(uuid, transferRequest.ToAccountNumber, amountDecimal)
+	handler.walletService.TransferFunds(userId, transferRequest.ToAccountNumber, amountDecimal)
 
-	return c.JSON(fiber.Map{"message": "Transfer successful"})
+	resp.Status = http.StatusOK
+	resp.Message = "Transfer successful"
+	return c.Status(resp.Status).JSON(resp)
 }
 
 func (handler *walletHandler) Fund(c *fiber.Ctx) error {
 	var fundRequest request.WalletFundRequest
+	var resp response.Response
 
 	if err := c.BodyParser(&fundRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request"})
+		resp.Status = http.StatusUnprocessableEntity
+		resp.Message = "Invalid request"
+		return c.Status(resp.Status).JSON(resp)
 	}
 
 	if _, err := handler.validator.FundValidate(fundRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		resp.Status = http.StatusUnprocessableEntity
+		resp.Message = err.Error()
+		return c.Status(resp.Status).JSON(resp)
 	}
 
-	userId := c.Locals("userId").(string)
-	uuid, err := uuid.Parse(userId)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid user ID"})
-	}
+	userId := c.Locals("userId").(uuid.UUID)
 
 	amountDecimal := decimal.NewFromFloat(fundRequest.Amount)
 
-	if err := handler.walletService.FundWallet(uuid, amountDecimal); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": err.Error()})
+	if err := handler.walletService.FundWallet(userId, amountDecimal); err != nil {
+		resp.Status = http.StatusBadRequest
+		resp.Message = err.Error()
+		return c.Status(resp.Status).JSON(resp)
 	}
 
-	return c.JSON(fiber.Map{"message": "Wallet funded successfully"})
+	resp.Status = http.StatusOK
+	resp.Message = "Wallet funded successfully"
+	return c.Status(resp.Status).JSON(resp)
 }
 
 func (handler *walletHandler) Withdraw(c *fiber.Ctx) error {
 	var withdrawRequest request.WalletWithdrawRequest
+	var resp response.Response
 
 	if err := c.BodyParser(&withdrawRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request"})
+		resp.Status = http.StatusUnprocessableEntity
+		resp.Message = "Invalid request"
+		return c.Status(resp.Status).JSON(resp)
 	}
 
 	if _, err := handler.validator.WithdrawValidate(withdrawRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		resp.Status = http.StatusUnprocessableEntity
+		resp.Message = err.Error()
+		return c.Status(resp.Status).JSON(resp)
 	}
 
-	userId := c.Locals("userId").(string)
-	uuid, err := uuid.Parse(userId)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid user ID"})
-	}
+	userId := c.Locals("userId").(uuid.UUID)
 
 	amountDecimal := decimal.NewFromFloat(withdrawRequest.Amount)
 
-	if err := handler.walletService.WithdrawFromWallet(uuid, amountDecimal); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": err.Error()})
+	if err := handler.walletService.WithdrawFromWallet(userId, amountDecimal); err != nil {
+		resp.Status = http.StatusBadRequest
+		resp.Message = err.Error()
+		return c.Status(resp.Status).JSON(resp)
 	}
 
-	return c.JSON(fiber.Map{"message": "Withdrawal successful"})
+	resp.Status = http.StatusOK
+	resp.Message = "Withdrawal successful"
+	return c.Status(resp.Status).JSON(resp)
 }
