@@ -19,15 +19,10 @@ func NewTransactionHandler(transactionService service.TransactionServiceInterfac
 }
 
 func (handler *transactionHandler) GetTransactionHistory(c *fiber.Ctx) error {
-	userId := c.Locals("userId").(string)
+	userId := c.Locals("userId").(uuid.UUID)
 	pageable := GeneratePageable(c)
 
-	uuid, err := uuid.Parse(userId)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid user ID"})
-	}
-
-	transactions, pagination, err := handler.transactionService.FindTransactionsByUserID(uuid, pageable)
+	transactions, pagination, err := handler.transactionService.FindTransactionsByUserID(userId, pageable)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": err.Error()})
 	}
