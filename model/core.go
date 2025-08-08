@@ -66,5 +66,8 @@ type ReconciliationLog struct {
 func (t *Transaction) BeforeCreate(tx *gorm.DB) (err error) {
 	// Generate a unique reference for the transaction
 	t.Reference = helper.GenerateRandomAlphaNumeric(12)
+
+	t.BaseModel.BeforeCreate(tx)
+
 	return nil
 }
