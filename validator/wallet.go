@@ -11,7 +11,7 @@ type WalletValidator struct {
 
 func (validator *WalletValidator) FundValidate(fundReq request.WalletFundRequest) (map[string]interface{}, error) {
 	err := validation.ValidateStruct(&fundReq,
-		validation.Field(&fundReq.Amount, validation.Required, validation.Min(1)),
+		validation.Field(&fundReq.Amount, validation.Required, validation.Min(1.00)),
 	)
 
 	if err != nil {
