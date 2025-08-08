@@ -33,4 +33,5 @@ func InitializeWalletRouter(router fiber.Router, db database.DatabaseInterface, 
 	walletRoute.Get("/", walletHandler.GetDetails)
 	walletRoute.Post("/fund", walletHandler.Fund)
 	walletRoute.Post("/withdraw", walletHandler.Withdraw)
+	walletRoute.Post("/transfer", walletHandler.Transfer)
 }
