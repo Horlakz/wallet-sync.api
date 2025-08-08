@@ -2,12 +2,12 @@ package service
 
 import (
 	"github.com/google/uuid"
-	"github.com/horlakz/wallet-sync.api/model"
+	"github.com/horlakz/wallet-sync.api/dto"
 	core_repository "github.com/horlakz/wallet-sync.api/repository/core"
 )
 
 type TransactionServiceInterface interface {
-	FindTransactionsByUserID(userID uuid.UUID, pageable core_repository.Pageable) ([]model.Transaction, core_repository.Pagination, error)
+	FindTransactionsByUserID(userID uuid.UUID, pageable core_repository.Pageable) ([]dto.TransactionDto, core_repository.Pagination, error)
 }
 
 type transactionService struct {
@@ -20,7 +20,7 @@ func NewTransactionService(transactionRepo core_repository.TransactionRepository
 	}
 }
 
-func (s *transactionService) FindTransactionsByUserID(userID uuid.UUID, pageable core_repository.Pageable) ([]model.Transaction, core_repository.Pagination, error) {
+func (s *transactionService) FindTransactionsByUserID(userID uuid.UUID, pageable core_repository.Pageable) ([]dto.TransactionDto, core_repository.Pagination, error) {
 	transactions, pagination, err := s.transactionRepo.FindTransactionsByUserID(userID.String(), pageable)
 	if err != nil {
 		return nil, core_repository.Pagination{}, err
