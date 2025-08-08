@@ -65,7 +65,11 @@ func (handler *walletHandler) Transfer(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(uuid.UUID)
 
 	amountDecimal := decimal.NewFromFloat(transferRequest.Amount)
-	handler.walletService.TransferFunds(userId, transferRequest.ToAccountNumber, amountDecimal)
+	if err := handler.walletService.TransferFunds(userId, transferRequest.ToAccountNumber, amountDecimal); err != nil {
+		resp.Status = http.StatusBadRequest
+		resp.Message = err.Error()
+		return c.Status(resp.Status).JSON(resp)
+	}
 
 	resp.Status = http.StatusOK
 	resp.Message = "Transfer successful"
