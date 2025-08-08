@@ -62,6 +62,10 @@ func (s *authService) Register(data dto.RegisterDTO) error {
 		Password: hashedPassword,
 	}
 
+	if existingUser, _ := s.userRepo.FindByEmail(data.Email); existingUser != nil {
+		return errors.New("user already exists")
+	}
+
 	if err := s.userRepo.Create(user); err != nil {
 		return err
 	}
