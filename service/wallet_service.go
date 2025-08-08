@@ -34,7 +34,7 @@ func NewWalletService(
 		ledgerEntryRepo: ledgerEntryRepo,
 	}
 }
-func (s *walletService) FundWallet(userID uuid.UUID, amount decimal.Decimal) error {
+func (s *walletService) FundWallet(userID uuid.UUID, amount decimal.Decimal) error { // use a transaction and rollback if any step fails
 	account, err := s.accountRepo.GetAccountByUserID(userID)
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (s *walletService) FundWallet(userID uuid.UUID, amount decimal.Decimal) err
 	}
 
 	// Create a transaction record
-	transaction := &model.Transaction{
+	transaction := model.Transaction{
 		UserID:      *account.UserID,
 		Type:        model.Credit,
 		Status:      model.TransactionCompleted,
@@ -55,7 +55,7 @@ func (s *walletService) FundWallet(userID uuid.UUID, amount decimal.Decimal) err
 		Description: "Wallet funding",
 	}
 
-	if err := s.transactionRepo.CreateTransaction(transaction); err != nil {
+	if err := s.transactionRepo.CreateTransaction(&transaction); err != nil {
 		return err
 	}
 
@@ -144,6 +144,11 @@ func (s *walletService) TransferFunds(fromUserID uuid.UUID, toAccountNumber stri
 	toAccount, err := s.accountRepo.GetAccountByNumber(toAccountNumber)
 	if err != nil {
 		return err
+	}
+
+	// check if wallet belongs to self
+	if *toAccount.UserID == fromUserID {
+		return errors.New("cannot transfer to your own account")
 	}
 
 	// Check if the from account has sufficient balance
