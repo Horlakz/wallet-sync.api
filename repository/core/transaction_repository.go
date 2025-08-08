@@ -1,6 +1,7 @@
 package core_repository
 
 import (
+	"github.com/horlakz/wallet-sync.api/dto"
 	"github.com/horlakz/wallet-sync.api/lib/database"
 	"github.com/horlakz/wallet-sync.api/model"
 )
@@ -24,7 +25,7 @@ type TransactionRepository interface {
 	CreateTransaction(transaction *model.Transaction) error
 	GetTransactionByReference(reference string) (*model.Transaction, error)
 	UpdateTransactionStatus(reference string, status string) error
-	FindTransactionsByUserID(userID string, pageable Pageable) ([]model.Transaction, Pagination, error)
+	FindTransactionsByUserID(userID string, pageable Pageable) ([]dto.TransactionDto, Pagination, error)
 	GetAllTransactions() ([]model.Transaction, error)
 }
 
@@ -69,8 +70,8 @@ func (r *transactionRepository) GetTransactionsByUserID(userID string) ([]model.
 	return transactions, nil
 }
 
-func (r *transactionRepository) FindTransactionsByUserID(userID string, pageable Pageable) ([]model.Transaction, Pagination, error) {
-	var transactions []model.Transaction
+func (r *transactionRepository) FindTransactionsByUserID(userID string, pageable Pageable) ([]dto.TransactionDto, Pagination, error) {
+	var transactions []dto.TransactionDto
 	var totalItems int64
 
 	query := r.db.Connection().Model(&model.Transaction{}).Where("user_id = ?", userID)
