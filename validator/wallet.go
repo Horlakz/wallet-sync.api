@@ -23,7 +23,7 @@ func (validator *WalletValidator) FundValidate(fundReq request.WalletFundRequest
 
 func (validator *WalletValidator) WithdrawValidate(withdrawReq request.WalletWithdrawRequest) (map[string]interface{}, error) {
 	err := validation.ValidateStruct(&withdrawReq,
-		validation.Field(&withdrawReq.Amount, validation.Required, validation.Min(1)),
+		validation.Field(&withdrawReq.Amount, validation.Required, validation.Min(1.00)),
 	)
 
 	if err != nil {
@@ -36,7 +36,7 @@ func (validator *WalletValidator) WithdrawValidate(withdrawReq request.WalletWit
 func (validator *WalletValidator) TransferValidate(transferReq request.WalletTransferRequest) (map[string]interface{}, error) {
 	err := validation.ValidateStruct(&transferReq,
 		validation.Field(&transferReq.ToAccountNumber, validation.Required, validation.Length(10, 10)),
-		validation.Field(&transferReq.Amount, validation.Required, validation.Min(1)),
+		validation.Field(&transferReq.Amount, validation.Required, validation.Min(1.00)),
 	)
 
 	if err != nil {
