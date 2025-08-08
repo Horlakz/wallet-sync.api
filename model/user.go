@@ -17,7 +17,7 @@ type User struct {
 	Password string `json:"password" gorm:"not null"`
 }
 
-func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
 	// convert email to lowercase before saving
 	u.Email = strings.ToLower(u.Email)
 
