@@ -1,6 +1,9 @@
 package service
 
 import (
+	"fmt"
+
+	"github.com/horlakz/wallet-sync.api/internal/config"
 	"github.com/horlakz/wallet-sync.api/model"
 	core_repository "github.com/horlakz/wallet-sync.api/repository/core"
 )
@@ -14,6 +17,7 @@ type reconciliationService struct {
 	transactionRepo       core_repository.TransactionRepository
 	accountRepo           core_repository.AccountRepository
 	reconciliationLogRepo core_repository.ReconciliationLogRepository
+	logger                *config.Logger
 }
 
 func NewReconciliationService(
@@ -27,60 +31,61 @@ func NewReconciliationService(
 		transactionRepo:       transactionRepo,
 		accountRepo:           accountRepo,
 		reconciliationLogRepo: reconciliationLogRepo,
+		logger:                config.NewLogger(),
 	}
 }
 
-func (s *reconciliationService) ReconcileTransactions() error {
-	// Fetch all transactions
-	transactions, err := s.transactionRepo.GetAllTransactions()
+func (s *reconciliationService) ReconcileTransactions() (err error) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic recovered in ReconcileTransactions: %v", r)
+			s.logger.Log().Errorf("panic recovered in ReconcileTransactions: %v", r)
+			return
+		}
+	}()
+
+	accounts, err := s.accountRepo.GetAllAccounts()
 	if err != nil {
 		return err
 	}
 
-	for _, tx := range transactions {
-		// Check if transaction has corresponding ledger entry
-		_, err := s.ledgerEntryRepo.GetLedgerEntryByTransactionID(tx.ID)
-		if err != nil {
-			return err
-		}
+	for _, account := range accounts {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Log().Errorf("panic recovered for account %v: %v", account.ID, r)
+				}
+			}()
 
-		// if ledgerEntry == nil {
-		// 	// If missing, create ledger entry
-		// 	newEntry := model.LedgerEntry{
-		// 		TransactionID: tx.ID,
-		// 		AccountID:     *tx.AccountID,
-		// 		Amount:        tx.Amount,
-		// 		Type:          tx.Type,
-		// 		CreatedAt:     tx.CreatedAt,
-		// 	}
-		// 	if err := s.ledgerEntryRepo.CreateLedgerEntry(newEntry); err != nil {
-		// 		return err
-		// 	}
-		// }
-
-		// Optionally, update account balance if needed
-		if err != nil {
-			return err
-		}
-		// Example: update balance based on transaction type
-		switch tx.Type {
-		case "credit":
-			if err := s.accountRepo.UpdateAccountBalance(tx.UserID, tx.Amount); err != nil {
-				return err
+			credits, err := s.ledgerEntryRepo.GetTotalCreditsByAccountID(account.ID)
+			if err != nil {
+				s.logger.Log().Errorf("error getting credits for account %v: %v", account.ID, err)
+				return
 			}
-		case "debit":
-			if err := s.accountRepo.UpdateAccountBalance(tx.UserID, tx.Amount.Neg()); err != nil {
-				return err
+
+			debits, err := s.ledgerEntryRepo.GetTotalDebitsByAccountID(account.ID)
+			if err != nil {
+				s.logger.Log().Errorf("error getting debits for account %v: %v", account.ID, err)
+				return
 			}
-		}
-	}
 
-	log := model.ReconciliationLog{
-		// Populate log fields
-	}
+			computedBalance := credits.Sub(debits)
 
-	if err := s.reconciliationLogRepo.CreateReconciliationLog(&log); err != nil {
-		return err
+			if computedBalance.Cmp(account.Balance) != 0 {
+				reconciliationLog := &model.ReconciliationLog{
+					AccountID:       account.ID,
+					ComputedBalance: computedBalance,
+					StoredBalance:   account.Balance,
+					Discrepancy:     computedBalance.Sub(account.Balance),
+				}
+
+				if err := s.reconciliationLogRepo.CreateReconciliationLog(reconciliationLog); err != nil {
+					s.logger.Log().Errorf("error creating reconciliation log for account %v: %v", account.ID, err)
+					return
+				}
+			}
+		}()
 	}
 
 	return nil
