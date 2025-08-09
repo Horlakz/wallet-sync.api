@@ -11,9 +11,7 @@ type Logger struct {
 }
 
 func NewLogger() *Logger {
-	logger := &Logger{
-		log: logrus.New(),
-	}
+	logger := &Logger{log: logrus.New()}
 	logger.init()
 	return logger
 }
