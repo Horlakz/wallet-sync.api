@@ -13,6 +13,7 @@ type AccountRepository interface {
 	GetWalletAccountByUserID(userID uuid.UUID) (*model.Account, error)
 	GetAccountByNumber(accountNumber string) (*model.Account, error)
 	UpdateAccountBalance(userID uuid.UUID, amount decimal.Decimal) error
+	GetAllAccounts() ([]*model.Account, error)
 }
 
 type accountRepository struct {
@@ -63,4 +64,13 @@ func (r *accountRepository) UpdateAccountBalance(userID uuid.UUID, amount decima
 
 	account.Balance = account.Balance.Add(amount)
 	return r.db.Connection().Save(&account).Error
+}
+
+func (r *accountRepository) GetAllAccounts() ([]*model.Account, error) {
+	var accounts []*model.Account
+	err := r.db.Connection().Find(&accounts).Error
+	if err != nil {
+		return nil, err
+	}
+	return accounts, nil
 }
