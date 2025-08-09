@@ -2,6 +2,8 @@ package core_repository
 
 import (
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+
 	"github.com/horlakz/wallet-sync.api/lib/database"
 	"github.com/horlakz/wallet-sync.api/model"
 )
@@ -11,6 +13,8 @@ type LedgerEntryRepository interface {
 	GetLedgerEntriesByUserID(userID string) ([]model.LedgerEntry, error)
 	UpdateLedgerEntry(entry *model.LedgerEntry) error
 	GetLedgerEntryByTransactionID(transactionID uuid.UUID) (*model.LedgerEntry, error)
+	GetTotalCreditsByAccountID(accountID uuid.UUID) (decimal.Decimal, error)
+	GetTotalDebitsByAccountID(accountID uuid.UUID) (decimal.Decimal, error)
 }
 
 type ledgerEntryRepository struct {
@@ -45,4 +49,30 @@ func (r *ledgerEntryRepository) GetLedgerEntryByTransactionID(transactionID uuid
 		return nil, err
 	}
 	return &entry, nil
+}
+
+func (r *ledgerEntryRepository) GetTotalCreditsByAccountID(accountID uuid.UUID) (decimal.Decimal, error) {
+	var total decimal.Decimal
+	err := r.db.Connection().
+		Model(&model.LedgerEntry{}).
+		Where("account_id = ? AND entry_type = ?", accountID, model.Credit).
+		Select("COALESCE(SUM(amount), 0)").
+		Scan(&total).Error
+	if err != nil {
+		return decimal.Zero, err
+	}
+	return total, nil
+}
+
+func (r *ledgerEntryRepository) GetTotalDebitsByAccountID(accountID uuid.UUID) (decimal.Decimal, error) {
+	var total decimal.Decimal
+	err := r.db.Connection().
+		Model(&model.LedgerEntry{}).
+		Where("account_id = ? AND entry_type = ?", accountID, model.Debit).
+		Select("COALESCE(SUM(amount), 0)").
+		Scan(&total).Error
+	if err != nil {
+		return decimal.Zero, err
+	}
+	return total, nil
 }
