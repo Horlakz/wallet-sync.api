@@ -1,8 +1,9 @@
 package database
 
 import (
-	"github.com/horlakz/wallet-sync.api/internal/config"
 	"gorm.io/gorm"
+
+	"github.com/horlakz/wallet-sync.api/internal/config"
 )
 
 type DatabaseInterface interface {
