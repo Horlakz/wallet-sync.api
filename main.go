@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/horlakz/wallet-sync.api/internal/config"
+	"github.com/horlakz/wallet-sync.api/internal/job"
 	"github.com/horlakz/wallet-sync.api/internal/seed"
 	"github.com/horlakz/wallet-sync.api/lib/database"
 	"github.com/horlakz/wallet-sync.api/router"
@@ -30,6 +31,7 @@ func main() {
 		Expiration:        60 * time.Second,
 		LimiterMiddleware: limiter.FixedWindow{},
 	}))
+	cronService := job.NewCronService()
 
 	// Get environment variables
 	env := config.GetEnv()
@@ -45,6 +47,9 @@ func main() {
 
 	// Seed database
 	seed.NewSeeder(dbConn).Seed()
+
+	// Initialize cron jobs
+	cronService.Start()
 
 	log.Fatal(app.Listen("0.0.0.0:" + env.PORT))
 }
