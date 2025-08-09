@@ -29,6 +29,7 @@ _testmain.go
 # Dependency directories (remove the comment below to include it)
 # vendor/
 note.txt
+*.log
 
 # IDEs
 .idea/
