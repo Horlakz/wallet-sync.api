@@ -4,6 +4,7 @@ import (
 	"github.com/horlakz/wallet-sync.api/dto"
 	"github.com/horlakz/wallet-sync.api/lib/database"
 	"github.com/horlakz/wallet-sync.api/model"
+	"gorm.io/gorm"
 )
 
 type Pageable struct {
@@ -27,6 +28,7 @@ type TransactionRepository interface {
 	UpdateTransactionStatus(reference string, status string) error
 	FindTransactionsByUserID(userID string, pageable Pageable) ([]dto.TransactionDto, Pagination, error)
 	GetAllTransactions() ([]model.Transaction, error)
+	WithTx(tx *gorm.DB) TransactionRepository
 }
 
 type transactionRepository struct {
@@ -35,6 +37,10 @@ type transactionRepository struct {
 
 func NewTransactionRepository(db database.DatabaseInterface) TransactionRepository {
 	return &transactionRepository{db: db}
+}
+
+func (r *transactionRepository) WithTx(tx *gorm.DB) TransactionRepository {
+	return &transactionRepository{db: database.Wrap(tx)}
 }
 
 func (r *transactionRepository) CreateTransaction(transaction *model.Transaction) error {

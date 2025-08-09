@@ -5,6 +5,7 @@ import (
 	"github.com/horlakz/wallet-sync.api/lib/database"
 	"github.com/horlakz/wallet-sync.api/model"
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 )
 
 type AccountRepository interface {
@@ -14,6 +15,7 @@ type AccountRepository interface {
 	GetAccountByNumber(accountNumber string) (*model.Account, error)
 	UpdateAccountBalance(userID uuid.UUID, amount decimal.Decimal) error
 	GetAllAccounts() ([]*model.Account, error)
+	WithTx(tx *gorm.DB) AccountRepository
 }
 
 type accountRepository struct {
@@ -22,6 +24,10 @@ type accountRepository struct {
 
 func NewAccountRepository(db database.DatabaseInterface) AccountRepository {
 	return &accountRepository{db: db}
+}
+
+func (r *accountRepository) WithTx(tx *gorm.DB) AccountRepository {
+	return &accountRepository{db: database.Wrap(tx)}
 }
 
 func (r *accountRepository) CreateAccount(account *model.Account) error {

@@ -3,6 +3,7 @@ package core_repository
 import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 
 	"github.com/horlakz/wallet-sync.api/lib/database"
 	"github.com/horlakz/wallet-sync.api/model"
@@ -15,6 +16,7 @@ type LedgerEntryRepository interface {
 	GetLedgerEntryByTransactionID(transactionID uuid.UUID) (*model.LedgerEntry, error)
 	GetTotalCreditsByAccountID(accountID uuid.UUID) (decimal.Decimal, error)
 	GetTotalDebitsByAccountID(accountID uuid.UUID) (decimal.Decimal, error)
+	WithTx(tx *gorm.DB) LedgerEntryRepository
 }
 
 type ledgerEntryRepository struct {
@@ -23,6 +25,10 @@ type ledgerEntryRepository struct {
 
 func NewLedgerEntryRepository(db database.DatabaseInterface) LedgerEntryRepository {
 	return &ledgerEntryRepository{db: db}
+}
+
+func (r *ledgerEntryRepository) WithTx(tx *gorm.DB) LedgerEntryRepository {
+	return &ledgerEntryRepository{db: database.Wrap(tx)}
 }
 
 func (r *ledgerEntryRepository) CreateLedgerEntry(entry *model.LedgerEntry) error {
