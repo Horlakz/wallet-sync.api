@@ -58,35 +58,40 @@ A robust and scalable wallet management system built with Go and Fiber framework
 ## Installation
 
 1. **Clone the repository**
+
    ```bash
-   git clone <repository-url>
-   cd wallet-sync-api
+   git clone https://github.com/horlakz/wallet-sync.api.git
+   cd wallet-sync.api
    ```
 
 2. **Install dependencies**
+
    ```bash
    go mod download
    ```
 
 3. **Set up environment variables**
+
    ```bash
-   cp .env.example .env
+   cp .env.sample .env
    ```
-   
+
    Configure your `.env` file:
+
    ```env
    PORT=8000
-   
+
    DB_HOST=localhost
    DB_USER=root
    DB_PASSWORD=password
    DB_PORT=3306
    DB_NAME=wallet_sync
-   
+
    REDIS_SERVER=localhost:6379
    ```
 
 4. **Set up database**
+
    ```bash
    # Create MySQL database
    mysql -u root -p -e "CREATE DATABASE wallet_sync;"
@@ -103,36 +108,37 @@ The API will be available at `http://localhost:8000`
 
 ### Authentication
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/v1/auth/register` | Register a new user |
-| POST | `/v1/auth/login` | Login user |
+| Method | Endpoint            | Description         |
+| ------ | ------------------- | ------------------- |
+| POST   | `/v1/auth/register` | Register a new user |
+| POST   | `/v1/auth/login`    | Login user          |
 
 ### Wallet Operations
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/v1/wallet/` | Get wallet details | ✅ |
-| POST | `/v1/wallet/deposit` | Fund wallet | ✅ |
-| POST | `/v1/wallet/withdraw` | Withdraw from wallet | ✅ |
+| Method | Endpoint              | Description          | Auth Required |
+| ------ | --------------------- | -------------------- | ------------- |
+| GET    | `/v1/wallet/`         | Get wallet details   | ✅            |
+| POST   | `/v1/wallet/deposit`  | Fund wallet          | ✅            |
+| POST   | `/v1/wallet/withdraw` | Withdraw from wallet | ✅            |
 
 ### Transactions
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/v1/transaction/` | Get transaction history | ✅ |
+| Method | Endpoint           | Description             | Auth Required |
+| ------ | ------------------ | ----------------------- | ------------- |
+| GET    | `/v1/transaction/` | Get transaction history | ✅            |
 
 ### Monitoring
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/monitor` | System monitoring dashboard |
-| GET | `/health` | Health check endpoint |
-| GET | `/logs/:key` | Get application logs |
+| Method | Endpoint      | Description                 |
+| ------ | ------------- | --------------------------- |
+| GET    | `/v1/monitor` | System monitoring dashboard |
+| GET    | `/health`     | Health check endpoint       |
+| GET    | `/logs/:key`  | Get application logs        |
 
 ## API Usage Examples
 
 ### Register User
+
 ```bash
 curl -X POST http://localhost:8000/v1/auth/register \
   -H "Content-Type: application/json" \
@@ -144,6 +150,7 @@ curl -X POST http://localhost:8000/v1/auth/register \
 ```
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:8000/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -154,6 +161,7 @@ curl -X POST http://localhost:8000/v1/auth/login \
 ```
 
 ### Fund Wallet
+
 ```bash
 curl -X POST http://localhost:8000/v1/wallet/deposit \
   -H "Content-Type: application/json" \
@@ -164,12 +172,14 @@ curl -X POST http://localhost:8000/v1/wallet/deposit \
 ```
 
 ### Get Wallet Details
+
 ```bash
 curl -X GET http://localhost:8000/v1/wallet/ \
   -H "Authorization: Bearer <your-jwt-token>"
 ```
 
 ### Get Transaction History
+
 ```bash
 curl -X GET "http://localhost:8000/v1/transaction/?page=1&size=10&type=credit" \
   -H "Authorization: Bearer <your-jwt-token>"
@@ -188,30 +198,37 @@ The application uses the following core models:
 ## Features in Detail
 
 ### Double-Entry Bookkeeping
+
 Every transaction creates corresponding ledger entries ensuring financial accuracy and complete audit trails.
 
 ### Reconciliation Service
+
 The [`ReconciliationService`](service/reconciliation_service.go) provides automated reconciliation of transactions and account balances.
 
 ### Validation
+
 Input validation is handled by the [`validator`](validator/) package using ozzo-validation for robust data validation.
 
 ### Caching
+
 Redis integration provides efficient caching through the [`RedisClientInterface`](lib/database/redis.go).
 
 ## Development
 
 ### Running Tests
+
 ```bash
 go test ./...
 ```
 
 ### Building for Production
+
 ```bash
 go build -o wallet_sync main.go
 ```
 
 ### Database Migrations
+
 Migrations are automatically run on startup through the [`database.Migrate`](lib/database/database.go) function.
 
 ## Configuration
@@ -219,7 +236,7 @@ Migrations are automatically run on startup through the [`database.Migrate`](lib
 The application uses environment-based configuration managed by the [`config`](internal/config/) package. Key configuration options:
 
 - **PORT**: HTTP server port
-- **DB_***: Database connection settings
+- **DB\_\***: Database connection settings
 - **REDIS_SERVER**: Redis server address
 
 ## Security
