@@ -18,7 +18,7 @@ func InitializeWalletRouter(router fiber.Router, db database.DatabaseInterface, 
 	ledgerEntryRepository := core_repository.NewLedgerEntryRepository(db)
 
 	// Services
-	walletService := service.NewWalletService(accountRepository, transactionRepository, ledgerEntryRepository)
+	walletService := service.NewWalletService(accountRepository, transactionRepository, ledgerEntryRepository, db)
 
 	// Handlers
 	walletHandler := handler.NewWalletHandler(walletService)
