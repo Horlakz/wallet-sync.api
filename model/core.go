@@ -58,8 +58,8 @@ type ReconciliationLog struct {
 	database.BaseModel
 
 	AccountID       uuid.UUID       `json:"account_id"  gorm:"type:uuid; not null"`
-	ComputedBalance float64         `json:"computed_balance" gorm:"type:decimal(32,2);not null"`
-	StoredBalance   float64         `json:"stored_balance" gorm:"type:decimal(32,2);not null"`
+	ComputedBalance decimal.Decimal `json:"computed_balance" gorm:"type:decimal(32,2);not null"`
+	StoredBalance   decimal.Decimal `json:"stored_balance" gorm:"type:decimal(32,2);not null"`
 	Discrepancy     decimal.Decimal `json:"discrepancy" gorm:"type:decimal(32, 2);generated always as (actual_balance - computed_balance) stored"`
 }
 
