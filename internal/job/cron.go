@@ -19,10 +19,7 @@ type CronServiceInterface interface {
 	Start()
 }
 
-func NewCronService() CronServiceInterface {
-	env := config.GetEnv()
-	db := database.StartDatabaseClient(env)
-
+func NewCronService(db database.DatabaseInterface) CronServiceInterface {
 	ledgerEntryRepo := core_repository.NewLedgerEntryRepository(db)
 	transactionRepo := core_repository.NewTransactionRepository(db)
 	accountRepo := core_repository.NewAccountRepository(db)
