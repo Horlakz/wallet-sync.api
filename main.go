@@ -31,7 +31,6 @@ func main() {
 		Expiration:        60 * time.Second,
 		LimiterMiddleware: limiter.FixedWindow{},
 	}))
-	cronService := job.NewCronService()
 
 	// Get environment variables
 	env := config.GetEnv()
@@ -49,6 +48,7 @@ func main() {
 	seed.NewSeeder(dbConn).Seed()
 
 	// Initialize cron jobs
+	cronService := job.NewCronService(dbConn)
 	cronService.Start()
 
 	log.Fatal(app.Listen("0.0.0.0:" + env.PORT))
